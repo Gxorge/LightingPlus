@@ -1,6 +1,6 @@
 <br>
 <p align="center">
-  <img src="https://github.com/IsGabriellaCurious/InstaFailAccuracy/blob/master/Img/cover-small.png" alt="Lighting+" /> <br>
+  <img src="https://github.com/IsGabriellaCurious/LightingPlus/blob/master/Img/cover-small.png" alt="Lighting+" /> <br>
   <b>v1.0.0</b></br>
   Multiplayer lighting and boost colours? Yes please!
 </p>
