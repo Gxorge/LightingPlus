@@ -8,8 +8,8 @@
     <ProjectGuid>{5CE6B56D-0C0C-4CCC-A8A5-83FF6443B5AC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CustomBoostColours</RootNamespace>
-    <AssemblyName>CustomBoostColours</AssemblyName>
+    <RootNamespace>LightingPlus</RootNamespace>
+    <AssemblyName>LightingPlus</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <DebugSymbols>true</DebugSymbols>
@@ -110,6 +110,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConnectedPlayerLighting.cs" />
     <Compile Include="HarmonyPatches\ColourPatch.cs" />
     <Compile Include="HarmonyPatches\MPLightingPatch.cs" />
     <Compile Include="LightArrangement.cs" />
@@ -123,7 +124,7 @@
   <ItemGroup>
     <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
     <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
-    <None Include="CustomBoostColours.csproj.user" Condition="Exists('CustomBoostColours.csproj.user')" />
+    <None Include="LightingPlus.csproj.user" Condition="Exists('LightingPlus.csproj.user')" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">

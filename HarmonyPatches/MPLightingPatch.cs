@@ -29,7 +29,9 @@ namespace LightingPlus.HarmonyPatches
         public static TubeBloomPrePassLight behindLaserRight;
         public static TubeBloomPrePassLight farLaserLeft;
         public static TubeBloomPrePassLight farLaserRight;
+        public static List<ConnectedPlayerLighting> connectedPlayerLighting;
         public static List<TubeBloomPrePassLight> allLasers;
+        public static ColorSO cpOffColour;
 
         public static GameObject ringLights;
         public static DirectionalLight ringLightBehind;
@@ -68,6 +70,33 @@ namespace LightingPlus.HarmonyPatches
                 behindLaserRight.gameObject.SetActive(false);
                 farLaserLeft.gameObject.SetActive(false);
                 farLaserRight.gameObject.SetActive(false);
+
+                connectedPlayerLighting = new List<ConnectedPlayerLighting>();
+                var players = Resources.FindObjectsOfTypeAll<GameObject>().Where(obj => obj.name == "MultiplayerConnectedPlayerController(Clone)");
+                if (players != null)
+                {
+                    foreach (GameObject o in players)
+                    {
+                        ConnectedPlayerLighting l = new ConnectedPlayerLighting();
+                        GameObject _lasers = o.transform.Find("Lasers").gameObject;
+                        l.laserLeft = _lasers.transform.Find("SideLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.laserRight = _lasers.transform.Find("SideLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.laserFront = _lasers.transform.Find("FrontLaserC2").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.downLaserLeft = _lasers.transform.Find("FrontLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.downLaserRight = _lasers.transform.Find("FrontLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.downLaserConnector = _lasers.transform.Find("FrontLaserC").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.extendedLaserLeft = _lasers.transform.Find("ThinLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.extendedLaserRight = _lasers.transform.Find("ThinLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.AddAllToList();
+
+                        allLasers.AddRange(l.allLasers);
+                        connectedPlayerLighting.Add(l);
+                        Plugin.Log.Info("Loaded a Connected Player's lights");
+                    }
+                }
+
+                cpOffColour = GetCSO(new Color(0, 0, 0));
+                LightingController.HandleGlobalCPLightEvent(new LightArrangement() { enabled = false, color = cpOffColour });
 
                 ringLightBehind = ringLights.transform.Find("DirectionalLight1").gameObject.GetComponent<DirectionalLight>();
                 ringLightFront = ringLights.transform.Find("DirectionalLight2").gameObject.GetComponent<DirectionalLight>();
@@ -173,21 +202,36 @@ namespace LightingPlus.HarmonyPatches
                         {
                             HandleLightEvent(backLaserLeft, arr);
                             HandleLightEvent(backLaserRight, arr);
+                            foreach (ConnectedPlayerLighting c in connectedPlayerLighting)
+                            {
+                                HandleCPLightEvent(c.downLaserLeft, arr);
+                                HandleCPLightEvent(c.downLaserRight, arr);
+                                HandleCPLightEvent(c.downLaserConnector, arr);
+                            }
                             break;
                         }
                     case BeatmapEventType.Event1:
                         {
                             HandleRingEvent(arr);
+                            foreach (ConnectedPlayerLighting c in connectedPlayerLighting)
+                            {
+                                HandleCPLightEvent(c.extendedLaserLeft, arr);
+                                HandleCPLightEvent(c.extendedLaserRight, arr);
+                            }
                             break;
                         }
                     case BeatmapEventType.Event2:
                         {
                             HandleLightEvent(laserLeft, arr);
+                            foreach (ConnectedPlayerLighting c in connectedPlayerLighting) HandleCPLightEvent(c.laserLeft, arr);
+       
                             break;
                         }
                     case BeatmapEventType.Event3:
                         {
                             HandleLightEvent(laserRight, arr);
+                            HandleLightEvent(laserLeft, arr);
+                            foreach (ConnectedPlayerLighting c in connectedPlayerLighting) HandleCPLightEvent(c.laserRight, arr);
                             break;
                         }
                     case BeatmapEventType.Event4:
@@ -196,6 +240,7 @@ namespace LightingPlus.HarmonyPatches
                             HandleLightEvent(behindLaserRight, arr);
                             HandleLightEvent(ringLightLeft, arr);
                             HandleLightEvent(ringLightRight, arr);
+                            foreach (ConnectedPlayerLighting c in connectedPlayerLighting) HandleCPLightEvent(c.laserFront, arr);
                             break;
                         }
                     case BeatmapEventType.Event5:
@@ -203,7 +248,6 @@ namespace LightingPlus.HarmonyPatches
                             HandleBoost(data.value);
                             break;
                         }
-
                     default:
                         {
                             break;
@@ -316,6 +360,38 @@ namespace LightingPlus.HarmonyPatches
                 catch (Exception e)
                 {
                     Plugin.Log.Critical("Ring error 2: " + e.Message);
+                }
+            }
+
+            public static void HandleCPLightEvent(TubeBloomPrePassLight light, LightArrangement arr)
+            {
+                try
+                {
+                    light.enabled = arr.enabled;
+                    if (arr.enabled)
+                    {
+                        light.gameObject.SetActive(arr.enabled);
+                        light.color = arr.color;
+                    } 
+                    else
+                    {
+                        light.color = cpOffColour;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.Critical("CP Laser error: " + e.Message);
+                }
+            }
+
+            public static void HandleGlobalCPLightEvent(LightArrangement arr)
+            {
+                foreach (ConnectedPlayerLighting c in connectedPlayerLighting)
+                {
+                    foreach (TubeBloomPrePassLight light in c.allLasers)
+                    {
+                        HandleCPLightEvent(light, arr);
+                    }
                 }
             }
 
