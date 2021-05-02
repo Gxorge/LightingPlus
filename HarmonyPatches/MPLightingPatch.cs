@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using HarmonyLib;
 using UnityEngine;
 
-namespace CustomBoostColours.HarmonyPatches
+namespace LightingPlus.HarmonyPatches
 {
    
-    public static class LightingPatch
+    public static class MPLightingPatch
     {
         public static bool staticLights = false;
         public static bool loadedLights = false;

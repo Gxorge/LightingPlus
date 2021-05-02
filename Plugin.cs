@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using IPALogger = IPA.Logging.Logger;
 
-namespace CustomBoostColours
+namespace LightingPlus
 {
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
@@ -22,43 +22,25 @@ namespace CustomBoostColours
         internal static IPALogger Log { get; private set; }
 
         [Init]
-        /// <summary>
-        /// Called when the plugin is first loaded by IPA (either when the game starts or when the plugin is enabled if it starts disabled).
-        /// [Init] methods that use a Constructor or called before regular methods like InitWithConfig.
-        /// Only use [Init] with one Constructor.
-        /// </summary>
         public void Init(IPALogger logger)
         {
             Instance = this;
             Log = logger;
-            Log.Info("CustomBoostColours initialized.");
+            Log.Info("Lighting+ initialized.");
         }
-
-        #region BSIPA Config
-        //Uncomment to use BSIPA's config
-        /*
-        [Init]
-        public void InitWithConfig(Config conf)
-        {
-            Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
-            Log.Debug("Config loaded");
-        }
-        */
-        #endregion
 
         [OnStart]
         public void OnApplicationStart()
         {
-            Log.Debug("OnApplicationStart");
-            harmony = new Harmony("moe.gabriella.CustomBoostColours");
+            harmony = new Harmony("moe.gabriella.LightingPlus");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+            Log.Info("Ready!");
         }
 
         [OnExit]
         public void OnApplicationQuit()
         {
-            Log.Debug("OnApplicationQuit");
-            harmony.UnpatchAll("moe.gabriella.CustomBoostColours");
+            harmony.UnpatchAll("moe.gabriella.LightingPlus");
         }
     }
 }

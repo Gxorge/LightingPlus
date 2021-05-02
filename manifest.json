@@ -1,10 +1,10 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
-  "id": "CustomBoostColours",
-  "name": "CustomBoostColours",
+  "id": "LightingPlus",
+  "name": "Lighting+",
   "author": "Gabriella",
   "version": "1.0.0",
-  "description": "",
+  "description": "Allows for custom boost colours and multiplayer lighting!",
   "gameVersion": "1.15.0",
   "dependsOn": {
     "BSIPA": "^4.0.5"

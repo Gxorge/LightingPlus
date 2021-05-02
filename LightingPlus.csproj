@@ -111,7 +111,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HarmonyPatches\ColourPatch.cs" />
-    <Compile Include="HarmonyPatches\LightingPatch.cs" />
+    <Compile Include="HarmonyPatches\MPLightingPatch.cs" />
     <Compile Include="LightArrangement.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Configuration\PluginConfig.cs" />
