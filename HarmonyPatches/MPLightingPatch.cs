@@ -201,7 +201,8 @@ namespace LightingPlus.HarmonyPatches
 
                 EnvironmentInfoSO eiso = difficultyBeatmap.GetEnvironmentInfo();
                 colours = overrideColorScheme ?? new ColorScheme(eiso.colorScheme);
-                ColorScheme mapColor = new ColorScheme("CustomColourScheme", "CustomColourScheme", false, colours.saberAColor, colours.saberBColor, colours.environmentColor0, colours.environmentColor1, true, new Color(0.18823529411f, 0.59607843137f, 1f), new Color(0.53333333333f, 0.0862745098f, 1f), colours.obstaclesColor);
+                BoostColour b = Plugin.Boost;
+                ColorScheme mapColor = new ColorScheme("CustomColourScheme", "CustomColourScheme", false, colours.saberAColor, colours.saberBColor, colours.environmentColor0, colours.environmentColor1, true, new Color(b.r0, b.g0, b.b0), new Color(b.r1, b.g1, b.b1), colours.obstaclesColor);
                 overrideColorScheme = mapColor;
                 colours = mapColor;
                 colour0 = colours.environmentColor0;

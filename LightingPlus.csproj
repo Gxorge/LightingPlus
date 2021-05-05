@@ -110,12 +110,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoostColour.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="ConnectedPlayerLighting.cs" />
     <Compile Include="HarmonyPatches\ColourPatch.cs" />
     <Compile Include="HarmonyPatches\MPLightingPatch.cs" />
     <Compile Include="LightArrangement.cs" />
     <Compile Include="Plugin.cs" />
-    <Compile Include="Configuration\PluginConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
