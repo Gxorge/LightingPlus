@@ -3,7 +3,7 @@
   "id": "LightingPlus",
   "name": "Lighting+",
   "author": "Gabriella",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Allows for custom boost colours and multiplayer lighting!",
   "gameVersion": "1.15.0",
   "dependsOn": {

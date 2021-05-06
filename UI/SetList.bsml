@@ -1,0 +1,7 @@
+﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <vertical>
+    <page-button event-click='setList#PageUp' direction='Up'></page-button>
+    <list id='setList' expand-cell='true' select-cell='setSelect'></list>
+    <page-button event-click='setList#PageDown' direction='Down'></page-button>
+  </vertical>
+</bg>

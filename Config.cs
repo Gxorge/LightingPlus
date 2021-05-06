@@ -18,6 +18,11 @@ namespace LightingPlus
         [UseConverter(typeof(ListConverter<BoostColour>))]
         public virtual List<BoostColour> BoostColours { get; set; } = new List<BoostColour>();
 
-        public virtual void Change() { }
+        public virtual void Update(BoostColour colour)
+        {
+            SelectedId = colour.name;
+            Plugin.Boost = colour;
+            Plugin.Log.Info("Updated boost set to " + colour.name);
+        }
     }
 }

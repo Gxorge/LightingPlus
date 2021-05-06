@@ -22,7 +22,7 @@ namespace LightingPlus
         internal static Plugin Instance { get; private set; }
         internal static IPALogger Log { get; private set; }
         internal static Config Config { get; private set; }
-        internal static BoostColour Boost { get; private set; }
+        internal static BoostColour Boost { get; set; }
 
         [Init]
         public void Init(IPALogger logger, Conf conf)
@@ -71,6 +71,8 @@ namespace LightingPlus
 
             harmony = new Harmony("moe.gabriella.LightingPlus");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+            UI.ChooseSetUI.OnLoad();
 
             Log.Info("Ready!");
         }
