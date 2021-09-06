@@ -19,6 +19,7 @@ namespace LightingPlus.HarmonyPatches
         public static ColorScheme colours;
         public static Color colour0;
         public static Color colour1;
+        public static bool bostSupport;
 
         public static GameObject lasers;
         public static TubeBloomPrePassLight laserLeft;
@@ -58,7 +59,13 @@ namespace LightingPlus.HarmonyPatches
                 {
                     laserLeft = lasers.transform.Find("LaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
                     laserRight = lasers.transform.Find("LaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    backLaserLeft = lasers.transform.Find("LaserFrontL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                    backLaserLeft = lasers.transform.Find("LaserR/LaserFrontL").gameObject.GetComponent<TubeBloomPrePassLight>();
+
+                    // Fixing for some reason front L being a child of laser r, and fixing its position
+                    backLaserLeft.transform.parent = lasers.transform;
+                    var v3 = backLaserLeft.transform.position;
+                    backLaserLeft.transform.SetPositionAndRotation(new Vector3(v3.x, 0, v3.z), backLaserLeft.transform.rotation);
+
                     backLaserRight = lasers.transform.Find("LaserFrontR").gameObject.GetComponent<TubeBloomPrePassLight>();
                     behindLaserLeft = lasers.transform.Find("LaserBackL").gameObject.GetComponent<TubeBloomPrePassLight>();
                     behindLaserRight = lasers.transform.Find("LaserBackR").gameObject.GetComponent<TubeBloomPrePassLight>();
@@ -186,24 +193,28 @@ namespace LightingPlus.HarmonyPatches
                 EnvironmentEffectsFilterPreset defaultPreset = playerSpecificSettings.environmentEffectsFilterDefaultPreset;
                 EnvironmentEffectsFilterPreset ePlusPreset = playerSpecificSettings.environmentEffectsFilterExpertPlusPreset;
 
-                if (difficultyBeatmap.difficulty == BeatmapDifficulty.ExpertPlus && ePlusPreset == EnvironmentEffectsFilterPreset.NoEffects)
+                if ((difficultyBeatmap.difficulty == BeatmapDifficulty.ExpertPlus && ePlusPreset == EnvironmentEffectsFilterPreset.NoEffects) || (difficultyBeatmap.difficulty != BeatmapDifficulty.ExpertPlus && defaultPreset == EnvironmentEffectsFilterPreset.NoEffects))
                 {
+                    Plugin.Log.Info("Static lights are on");
                     staticLights = true;
-                }
-                else if (difficultyBeatmap.difficulty != BeatmapDifficulty.ExpertPlus && defaultPreset == EnvironmentEffectsFilterPreset.NoEffects)
-                {
-                    staticLights = true;
-                }
-                else
-                {
-                    staticLights = false;
                 }
 
                 EnvironmentInfoSO eiso = difficultyBeatmap.GetEnvironmentInfo();
                 colours = overrideColorScheme ?? new ColorScheme(eiso.colorScheme);
+
                 BoostColour b = Plugin.Boost;
-                ColorScheme mapColor = new ColorScheme("CustomColourScheme", "CustomColourScheme", false, colours.saberAColor, colours.saberBColor, colours.environmentColor0, colours.environmentColor1, true, new Color(b.r0, b.g0, b.b0), new Color(b.r1, b.g1, b.b1), colours.obstaclesColor);
-                overrideColorScheme = mapColor;
+
+                ColorScheme mapColor;
+                if (overrideColorScheme != null)
+                {
+                    mapColor = new ColorScheme("CustomColourScheme", "CustomColourScheme", false, "CustomColourScheme", false, colours.saberAColor, colours.saberBColor, colours.environmentColor0, colours.environmentColor1, true, new Color(b.r0, b.g0, b.b0), new Color(b.r1, b.g1, b.b1), colours.obstaclesColor);
+                    overrideColorScheme = mapColor;
+                }
+                else
+                {
+                    mapColor = colours;
+                }
+
                 colours = mapColor;
                 colour0 = colours.environmentColor0;
                 colour1 = colours.environmentColor1;
