@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,6 +33,7 @@ namespace LightingPlus.HarmonyPatches
         public static TubeBloomPrePassLight farLaserRight;
         public static List<ConnectedPlayerLighting> connectedPlayerLighting;
         public static List<TubeBloomPrePassLight> allLasers;
+        public static List<Transform> ringExpanded;
         public static ColorSO cpOffColour;
         public static bool playerLaserErr = false;
 
@@ -43,16 +45,27 @@ namespace LightingPlus.HarmonyPatches
         public static List<DirectionalLight> allRings;
         public static bool ringErr = false;
 
+        public static GameObject consturctionLeft;
+        public static GameObject consturctionRight;
+
         public static void LoadLights()
         {
             bool laserNull = false;
             bool ringNull = false;
             Plugin.Log.Info("Loading lights...");
 
+            ringExpanded = new List<Transform>();
+            new GameObject("LightingPlusCoRoutineController").AddComponent<CoRoutineController>();
+
             try
             {
                 lasers = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Lasers");
                 ringLights = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/DirectionalLights");
+
+                // Load player construction
+                consturctionLeft = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Construction/ConstructionL");
+                consturctionRight = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Construction/ConstructionR");
+
 
                 // Load the lasers
                 if (lasers != null)
@@ -235,9 +248,9 @@ namespace LightingPlus.HarmonyPatches
 
                 LightArrangement arr = CreateArrangement(data);
 
-                switch (data.type)
+                switch (data.type) // https://bsmg.wiki/mapping/map-format.html#events-2
                 {
-                    case BeatmapEventType.Event0:
+                    case BeatmapEventType.Event0: // Back Lasers
                         {
                             HandleLightEvent(backLaserLeft, arr);
                             HandleLightEvent(backLaserRight, arr);
@@ -249,7 +262,7 @@ namespace LightingPlus.HarmonyPatches
                             }
                             break;
                         }
-                    case BeatmapEventType.Event1:
+                    case BeatmapEventType.Event1: // Ring Lights
                         {
                             HandleRingEvent(arr);
                             foreach (ConnectedPlayerLighting c in connectedPlayerLighting)
@@ -259,38 +272,66 @@ namespace LightingPlus.HarmonyPatches
                             }
                             break;
                         }
-                    case BeatmapEventType.Event2:
+                    case BeatmapEventType.Event2: // Left Lasers
                         {
                             HandleLightEvent(laserLeft, arr);
                             foreach (ConnectedPlayerLighting c in connectedPlayerLighting) HandleCPLightEvent(c.laserLeft, arr);
        
                             break;
                         }
-                    case BeatmapEventType.Event3:
+                    case BeatmapEventType.Event3: // Right Lasers
                         {
                             HandleLightEvent(laserRight, arr);
                             HandleLightEvent(laserLeft, arr);
                             foreach (ConnectedPlayerLighting c in connectedPlayerLighting) HandleCPLightEvent(c.laserRight, arr);
                             break;
                         }
-                    case BeatmapEventType.Event4:
+                    case BeatmapEventType.Event4: // Center lights
                         {
                             HandleLightEvent(behindLaserLeft, arr);
                             HandleLightEvent(behindLaserRight, arr);
+                            HandleLightEvent(farLaserLeft, arr);
+                            HandleLightEvent(farLaserRight, arr);
                             HandleLightEvent(ringLightLeft, arr);
                             HandleLightEvent(ringLightRight, arr);
                             foreach (ConnectedPlayerLighting c in connectedPlayerLighting) HandleCPLightEvent(c.laserFront, arr);
                             break;
                         }
-                    case BeatmapEventType.Event5:
+                    case BeatmapEventType.Event5: // Boost colours
                         {
                             HandleBoost(data.value);
+                            break;
+                        }
+                    case BeatmapEventType.Event9: // Ring expand
+                        {
+                            CoRoutineController.i().StartCoroutine(RingExpand(laserLeft.transform, new Vector3((ringExpanded.Contains(laserLeft.transform) ? -1.20f : -4.20f), laserLeft.transform.position.y, laserLeft.transform.position.z), 0.5f));
+                            CoRoutineController.i().StartCoroutine(RingExpand(consturctionLeft.transform, new Vector3((ringExpanded.Contains(consturctionLeft.transform) ? 0 : -3), consturctionLeft.transform.position.y, consturctionLeft.transform.position.z), 0.5f));
+                            CoRoutineController.i().StartCoroutine(RingExpand(laserRight.transform, new Vector3((ringExpanded.Contains(laserRight.transform) ? 1.20f : 4.20f), laserRight.transform.position.y, laserRight.transform.position.z), 0.5f));
+                            CoRoutineController.i().StartCoroutine(RingExpand(consturctionRight.transform, new Vector3((ringExpanded.Contains(consturctionRight.transform) ? 0 : 3), consturctionRight.transform.position.y, consturctionRight.transform.position.z), 0.5f));
                             break;
                         }
                     default:
                         {
                             break;
                         }
+                }
+            }
+
+            public static IEnumerator RingExpand(Transform toMove, Vector3 toMoveTo, float timeToMove)
+            {
+                var currentPos = toMove.position;
+                var t = 0f;
+
+                if (ringExpanded.Contains(toMove))
+                    ringExpanded.Remove(toMove);
+                else
+                    ringExpanded.Add(toMove);
+
+                while (t < 1)
+                {
+                    t += Time.deltaTime / timeToMove;
+                    toMove.transform.position = Vector3.Lerp(currentPos, toMoveTo, t);
+                    yield return null;
                 }
             }
 
@@ -369,8 +410,8 @@ namespace LightingPlus.HarmonyPatches
                 {
                     HandleLightEvent(ringLightBehind, arr);
                     HandleLightEvent(ringLightFront, arr);
-                    HandleLightEvent(farLaserLeft, arr);
-                    HandleLightEvent(farLaserRight, arr);
+                    HandleLightEvent(ringLightLeft, arr);
+                    HandleLightEvent(ringLightRight, arr);
                 } 
                 catch (Exception e)
                 {
@@ -470,6 +511,22 @@ namespace LightingPlus.HarmonyPatches
                 }
 
                 return arr;
+            }
+        }
+
+        public class CoRoutineController : MonoBehaviour
+        {
+            private static CoRoutineController instance;
+
+            public void Start()
+            {
+                Plugin.Log.Info("instance created");
+                instance = this;
+            }
+
+            public static CoRoutineController i()
+            {
+                return instance;
             }
         }
     }
