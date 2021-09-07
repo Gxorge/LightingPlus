@@ -113,6 +113,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StaticLights.cs" />
     <Compile Include="BoostColour.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="ConnectedPlayerLighting.cs" />
@@ -121,19 +122,16 @@
     <Compile Include="LightArrangement.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\BoostSetView.cs" />
-    <Compile Include="UI\ChooseSetFlowCoordinator.cs" />
-    <Compile Include="UI\ChooseSetUI.cs" />
+    <Compile Include="UI\SettingsUI.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
-    <EmbeddedResource Include="UI\SetList.bsml" />
+    <EmbeddedResource Include="UI\settings.bsml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
     <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" />
     <None Include="LightingPlus.csproj.user" Condition="Exists('LightingPlus.csproj.user')" />
-    <None Include="LightingPlus.UI.SetList.bsml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">

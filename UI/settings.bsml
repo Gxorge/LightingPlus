@@ -1,0 +1,24 @@
+﻿<settings-container>
+  <horizontal horizontal-fit="PreferredSize">
+    <checkbox-setting apply-on-change="true" value="BoostColoursEnabled" text="Enable Custom Boost Colours"
+				hover-hint="Enables the use of the custom boost colours set below"
+						/>
+  </horizontal>
+
+  <horizontal horizontal-fit="PreferredSize">
+    <checkbox-setting apply-on-change="true" value="MultiPlayerLightingEnabled" text="Enable Multiplayer Lighting"
+				hover-hint="Enables the lighting system in multiplayer mode"
+						/>
+  </horizontal>
+
+  <horizontal horizontal-fit="PreferredSize">
+    <checkbox-setting apply-on-change="true" value="StaticLightsColoursEnabled" text="Enable Specific Static Lights Colour"
+				hover-hint="Enables the use of a specific colour when static lights is enabled"
+						/>
+  </horizontal>
+
+
+  <horizontal horizontal-fit="PreferredSize">
+    <dropdown-list-setting text='Select Boost Colour Preset' value='SelectedBoostId' options='boostcolourchooser' formatter='boostcolourformatter' hover-hint='Select which preset of colours you want your boosts to be'></dropdown-list-setting>
+  </horizontal>
+</settings-container>

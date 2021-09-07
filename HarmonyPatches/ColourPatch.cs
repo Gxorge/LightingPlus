@@ -22,18 +22,27 @@ namespace LightingPlus.HarmonyPatches
 
             EnvironmentEffectsFilterPreset defaultPreset = playerSpecificSettings.environmentEffectsFilterDefaultPreset;
             EnvironmentEffectsFilterPreset ePlusPreset = playerSpecificSettings.environmentEffectsFilterExpertPlusPreset;
+
+            // If static lights
             if ((difficultyBeatmap.difficulty == BeatmapDifficulty.ExpertPlus && ePlusPreset == EnvironmentEffectsFilterPreset.NoEffects) || (difficultyBeatmap.difficulty != BeatmapDifficulty.ExpertPlus && defaultPreset == EnvironmentEffectsFilterPreset.NoEffects))
             {
-                ColorScheme mc = new ColorScheme("CustomColourScheme", "CustomColourScheme", false, "CustomColourScheme", false, curr.saberAColor, curr.saberBColor, new Color(0.54901960784f, 0.54901960784f, 0.54901960784f), new Color(0.54901960784f, 0.54901960784f, 0.54901960784f), false, new Color(), new Color(), curr.obstaclesColor);
+                if (!Plugin.Config.StaticLightsColoursEnabled)
+                    return;
+
+                StaticLights sl = Plugin.Config.StaticLightsColours;
+                ColorScheme mc = new ColorScheme("LPCustomColourScheme", "LPCustomColourScheme", false, "LPCustomColourScheme", false, curr.saberAColor, curr.saberBColor, new Color(sl.r / 255, sl.g / 255, sl.b / 255), new Color(sl.r / 255, sl.g / 255, sl.b / 255), false, new Color(), new Color(), curr.obstaclesColor);
                 overrideColorScheme = mc;
                 Plugin.Log.Info("Loaded static lights colours");
                 return;
             }
 
-            if (overrideColorScheme == null)
+            // Check if the colour scheme is being overrided, if it is, great we wanna use that. We also don't wanna use it if the overrided scheme already has boost colours
+            if (overrideColorScheme == null || overrideColorScheme.supportsEnvironmentColorBoost || !Plugin.Config.BoostColoursEnabled)
                 return;
+
+            // Set the new colour scheme
             BoostColour b = Plugin.Boost;
-            ColorScheme mapColor = new ColorScheme("CustomColourScheme", "CustomColourScheme", false, "CustomColourScheme", false, curr.saberAColor, curr.saberBColor, curr.environmentColor0, curr.environmentColor1, true, new Color(b.r0, b.g0, b.b0), new Color(b.r1, b.g1, b.b1), curr.obstaclesColor);
+            ColorScheme mapColor = new ColorScheme("LPCustomColourScheme", "LPCustomColourScheme", false, "LPCustomColourScheme", false, curr.saberAColor, curr.saberBColor, curr.environmentColor0, curr.environmentColor1, true, new Color(b.r0 / 255, b.g0 / 255, b.b0 / 255), new Color(b.r1 / 255, b.g1 /255, b.b1 / 255), curr.obstaclesColor);
             overrideColorScheme = mapColor;
             Plugin.Log.Info("Loaded Custom Boost Colours");
         }

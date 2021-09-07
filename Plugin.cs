@@ -11,6 +11,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Conf = IPA.Config.Config;
 using IPALogger = IPA.Logging.Logger;
+using BeatSaberMarkupLanguage.Settings;
+using LightingPlus.UI;
 
 namespace LightingPlus
 {
@@ -36,30 +38,39 @@ namespace LightingPlus
         [OnStart]
         public void OnApplicationStart()
         {
+            /*if (Config.BoostColoursEnabled == null)
+                Config.BoostColoursEnabled = true;
+
+            if (Config.MultiPlayerLightingEnabled == null)
+                Config.MultiPlayerLightingEnabled = true;
+
+            if (Config.StaticLightsColoursEnabled == null)
+                Config.StaticLightsColoursEnabled = true;
+
+            if (Config.StaticLightsColours == null)
+            {
+                StaticLights sl = new StaticLights(140f, 140f, 140f);
+                Config.StaticLightsColours = sl;
+            }
+
             if (Config.BoostColours.Count == 0)
             {
                 Log.Info("BoostColours config is empty!! Added default!");
-                BoostColour bc = new BoostColour();
-                bc.name = "Default";
-                bc.r0 = 0.18823529411f;
-                bc.g0 = 0.59607843137f;
-                bc.b0 = 1f;
-                bc.r1 = 0.53333333333f;
-                bc.g1 = 0.0862745098f;
-                bc.b1 = 1f;
+                BoostColour bc = new BoostColour("Default", 48f, 152f, 225f, 136f, 22f, 225f);
                 Config.BoostColours.Insert(0, bc);
-                Config.SelectedId = "Default";
+                Config.SelectedBoostId = "Default";
+            }*/
+
+            if (!Config.BoostColours.Any(x=> x.name == Config.SelectedBoostId))
+            {
+                Log.Info("SelectedId isnt in the BoostColours list. Default to the 0th item in the list.");
+                Config.SelectedBoostId = Config.BoostColours[0].name;
             }
 
-            if (Config.SelectedId == null || !Config.BoostColours.Any(x=> x.name == Config.SelectedId))
-            {
-                Log.Info("SelectedId is null or isnt in the BoostColours list. Default to the 0th item in the list.");
-                Config.SelectedId = Config.BoostColours[0].name;
-            }
 
             foreach (BoostColour bc in Config.BoostColours)
             {
-                if (bc.name == Config.SelectedId)
+                if (bc.name == Config.SelectedBoostId)
                 {
                     Boost = bc;
                     Log.Info("Loaded BoostColour set '" + bc.name + "'!");
@@ -69,10 +80,10 @@ namespace LightingPlus
 
             Log.Info("Loaded the config!");
 
+            BSMLSettings.instance.AddSettingsMenu("Lighting+", "LightingPlus.UI.settings.bsml", SettingsUI.instance);
+
             harmony = new Harmony("moe.gabriella.LightingPlus");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-
-            UI.ChooseSetUI.OnLoad();
 
             Log.Info("Ready!");
         }

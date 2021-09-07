@@ -12,6 +12,7 @@ namespace LightingPlus.HarmonyPatches
    
     public static class MPLightingPatch
     {
+        public static bool enabled = true;
         public static bool staticLights = false;
         public static bool loadedLights = false;
         public static bool isInMultiplayer = false;
@@ -196,6 +197,7 @@ namespace LightingPlus.HarmonyPatches
             [HarmonyPostfix]
             public static void Postfix(IDifficultyBeatmap difficultyBeatmap, PlayerSpecificSettings playerSpecificSettings, ref ColorScheme overrideColorScheme)
             {
+                enabled = Plugin.Config.MultiPlayerLightingEnabled;
                 loadedLights = false;
                 loadError = false;
                 playerLaserErr = false;
@@ -205,7 +207,7 @@ namespace LightingPlus.HarmonyPatches
 
                 EnvironmentEffectsFilterPreset defaultPreset = playerSpecificSettings.environmentEffectsFilterDefaultPreset;
                 EnvironmentEffectsFilterPreset ePlusPreset = playerSpecificSettings.environmentEffectsFilterExpertPlusPreset;
-
+                // If static lights
                 if ((difficultyBeatmap.difficulty == BeatmapDifficulty.ExpertPlus && ePlusPreset == EnvironmentEffectsFilterPreset.NoEffects) || (difficultyBeatmap.difficulty != BeatmapDifficulty.ExpertPlus && defaultPreset == EnvironmentEffectsFilterPreset.NoEffects))
                 {
                     Plugin.Log.Info("Static lights are on");
@@ -218,9 +220,9 @@ namespace LightingPlus.HarmonyPatches
                 BoostColour b = Plugin.Boost;
 
                 ColorScheme mapColor;
-                if (overrideColorScheme != null)
+                if (overrideColorScheme != null || !overrideColorScheme.supportsEnvironmentColorBoost)
                 {
-                    mapColor = new ColorScheme("CustomColourScheme", "CustomColourScheme", false, "CustomColourScheme", false, colours.saberAColor, colours.saberBColor, colours.environmentColor0, colours.environmentColor1, true, new Color(b.r0, b.g0, b.b0), new Color(b.r1, b.g1, b.b1), colours.obstaclesColor);
+                    mapColor = new ColorScheme("LPCustomColourScheme", "LPCustomColourScheme", false, "LPCustomColourScheme", false, colours.saberAColor, colours.saberBColor, colours.environmentColor0, colours.environmentColor1, true, new Color(b.r0 / 255, b.g0 / 255, b.b0 / 255), new Color(b.r1 / 255, b.g1 / 255, b.b1 / 255), colours.obstaclesColor);
                     overrideColorScheme = mapColor;
                 }
                 else
@@ -241,6 +243,7 @@ namespace LightingPlus.HarmonyPatches
             [HarmonyPostfix]
             public static void Postfix([HarmonyArgument(0)] BeatmapEventData data)
             {
+                if (!enabled) return;
                 if (loadError) return;
                 if (!isInMultiplayer) return;
                 if (staticLights) return;

@@ -13,14 +13,21 @@ namespace LightingPlus
 {
     internal class Config
     {
-        public virtual string SelectedId { get; set; }
+
+        public virtual bool BoostColoursEnabled { get; set; } = true;
+        public virtual bool MultiPlayerLightingEnabled { get; set; } = true;
+        public virtual bool StaticLightsColoursEnabled { get; set; } = true;
+
+        public virtual StaticLights StaticLightsColours { get; set; } = new StaticLights(140f, 140f, 140f);
+
+        public virtual string SelectedBoostId { get; set; } = "Default";
 
         [UseConverter(typeof(ListConverter<BoostColour>))]
-        public virtual List<BoostColour> BoostColours { get; set; } = new List<BoostColour>();
+        public virtual List<BoostColour> BoostColours { get; set; } = new List<BoostColour>() { new BoostColour("Default", 48f, 152f, 225f, 136f, 22f, 225f) };
 
         public virtual void Update(BoostColour colour)
         {
-            SelectedId = colour.name;
+            SelectedBoostId = colour.name;
             Plugin.Boost = colour;
             Plugin.Log.Info("Updated boost set to " + colour.name);
         }
