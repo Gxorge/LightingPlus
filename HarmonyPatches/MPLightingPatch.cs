@@ -38,6 +38,8 @@ namespace LightingPlus.HarmonyPatches
         public static ColorSO cpOffColour;
         public static bool playerLaserErr = false;
 
+        public static GameObject ring;
+        public static int ringRotateQueue;
         public static GameObject ringLights;
         public static DirectionalLight ringLightBehind;
         public static DirectionalLight ringLightFront;
@@ -127,6 +129,7 @@ namespace LightingPlus.HarmonyPatches
                 // Load the ring lights
                 if (ringLights != null)
                 {
+                    ring = GameObject.Find("Environment/ArenaScoreBoard");
                     ringLightBehind = ringLights.transform.Find("DirectionalLight1").gameObject.GetComponent<DirectionalLight>();
                     ringLightFront = ringLights.transform.Find("DirectionalLight2").gameObject.GetComponent<DirectionalLight>();
                     ringLightLeft = ringLights.transform.Find("DirectionalLight4").gameObject.GetComponent<DirectionalLight>();
@@ -203,6 +206,7 @@ namespace LightingPlus.HarmonyPatches
                 playerLaserErr = false;
                 ringErr = false;
                 isInMultiplayer = true;
+                ringRotateQueue = 0;
                 Plugin.Log.Info("In multiplayer.");
 
                 EnvironmentEffectsFilterPreset defaultPreset = playerSpecificSettings.environmentEffectsFilterDefaultPreset;
@@ -305,6 +309,11 @@ namespace LightingPlus.HarmonyPatches
                             HandleBoost(data.value);
                             break;
                         }
+                    case BeatmapEventType.Event8: // Ring rotate
+                        {
+                            QueueRingRoate();
+                            break;
+                        }
                     case BeatmapEventType.Event9: // Ring expand
                         {
                             CoRoutineController.i().StartCoroutine(RingExpand(laserLeft.transform, new Vector3((ringExpanded.Contains(laserLeft.transform) ? -1.20f : -4.20f), laserLeft.transform.position.y, laserLeft.transform.position.z), 0.5f));
@@ -337,6 +346,31 @@ namespace LightingPlus.HarmonyPatches
                     yield return null;
                 }
             }
+
+            public static void QueueRingRoate()
+            {
+                ringRotateQueue++;
+                if (ringRotateQueue == 1)
+                    CoRoutineController.i().StartCoroutine(RingRotate(0.25f));
+            }
+
+            public static IEnumerator RingRotate(float timeToMove)
+            {
+                Quaternion startRot = ring.transform.rotation;
+                float t = 0.0f;
+                while (t < timeToMove)
+                {
+                    t += Time.deltaTime;
+                    ring.transform.rotation = startRot * Quaternion.AngleAxis(t / timeToMove * 180f, Vector3.right); 
+                    yield return null;
+                }
+                ring.transform.rotation = startRot; // This does make it look a teeny bit janky if you look closley, but its fine
+
+                ringRotateQueue--;
+                if (ringRotateQueue > 0)
+                    CoRoutineController.i().StartCoroutine(RingRotate(0.1f));
+            }
+
 
             public static void HandleBoost(int value)
             {
