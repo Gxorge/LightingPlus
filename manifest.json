@@ -3,8 +3,8 @@
   "id": "LightingPlus",
   "name": "Lighting+",
   "author": "Gabriella",
-  "version": "1.7.0",
-  "description": "Allows for custom boost colours and multiplayer lighting!",
+  "version": "1.7.1",
+  "description": "Beat Saber Lighting Overhaul",
   "gameVersion": "1.17.0",
   "dependsOn": {
     "BSIPA": "^4.0.5",

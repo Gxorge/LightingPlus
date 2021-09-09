@@ -224,7 +224,7 @@ namespace LightingPlus.HarmonyPatches
                 BoostColour b = Plugin.Boost;
 
                 ColorScheme mapColor;
-                if (overrideColorScheme != null || !overrideColorScheme.supportsEnvironmentColorBoost)
+                if (overrideColorScheme != null && !overrideColorScheme.supportsEnvironmentColorBoost && Plugin.Config.BoostColoursEnabled)
                 {
                     mapColor = new ColorScheme("LPCustomColourScheme", "LPCustomColourScheme", false, "LPCustomColourScheme", false, colours.saberAColor, colours.saberBColor, colours.environmentColor0, colours.environmentColor1, true, new Color(b.r0 / 255, b.g0 / 255, b.b0 / 255), new Color(b.r1 / 255, b.g1 / 255, b.b1 / 255), colours.obstaclesColor);
                     overrideColorScheme = mapColor;
