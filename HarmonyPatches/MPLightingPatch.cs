@@ -17,6 +17,7 @@ namespace LightingPlus.HarmonyPatches
         public static bool loadedLights = false;
         public static bool isInMultiplayer = false;
         public static bool loadError = false;
+        public static bool duelPlayer = false;
 
         public static ColorScheme colours;
         public static Color colour0;
@@ -65,85 +66,127 @@ namespace LightingPlus.HarmonyPatches
                 lasers = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Lasers");
                 ringLights = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/DirectionalLights");
 
-                // Load player construction
-                consturctionLeft = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Construction/ConstructionL");
-                consturctionRight = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Construction/ConstructionR");
-
-
-                // Load the lasers
-                if (lasers != null)
+                if (lasers == null && ringLights == null) // Duel?
                 {
-                    laserLeft = lasers.transform.Find("LaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    laserRight = lasers.transform.Find("LaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    backLaserLeft = lasers.transform.Find("LaserR/LaserFrontL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                    lasers = GameObject.Find("MultiplayerDuelLocalActivePlayerController(Clone)/IsActiveObjects/Lasers");
+                    ringLights = GameObject.Find("MultiplayerDuelLocalActivePlayerController(Clone)/IsActiveObjects/DirectionalLights");
 
-                    // Fixing for some reason front L being a child of laser r, and fixing its position
-                    backLaserLeft.transform.parent = lasers.transform;
-                    var v3 = backLaserLeft.transform.position;
-                    backLaserLeft.transform.SetPositionAndRotation(new Vector3(v3.x, 0, v3.z), backLaserLeft.transform.rotation);
-
-                    backLaserRight = lasers.transform.Find("LaserFrontR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    behindLaserLeft = lasers.transform.Find("LaserBackL").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    behindLaserRight = lasers.transform.Find("LaserBackR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    farLaserLeft = lasers.transform.Find("LaserFarL").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    farLaserRight = lasers.transform.Find("LaserFarR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                    allLasers = new List<TubeBloomPrePassLight>() { laserLeft, laserRight, backLaserLeft, backLaserRight, behindLaserLeft, behindLaserRight, farLaserLeft, farLaserRight };
-
-                    foreach (TubeBloomPrePassLight l in allLasers) LightingController.HandleLightEvent(l, new LightArrangement() { enabled = false, color = null });
-                    playerLaserErr = false;
-                }
-                else
-                {
-                    Plugin.Log.Error("Lasers are disabled.");
-                    playerLaserErr = true;
-                }
-
-                // Loaded the other player's lasers
-                connectedPlayerLighting = new List<ConnectedPlayerLighting>();
-                var players = Resources.FindObjectsOfTypeAll<GameObject>().Where(obj => obj.name == "MultiplayerConnectedPlayerController(Clone)");
-                if (players != null)
-                {
-                    foreach (GameObject o in players)
+                    if (lasers == null && ringLights == null)
                     {
-                        ConnectedPlayerLighting l = new ConnectedPlayerLighting();
-                        GameObject _lasers = o.transform.Find("Lasers").gameObject;
-                        l.laserLeft = _lasers.transform.Find("SideLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.laserRight = _lasers.transform.Find("SideLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.laserFront = _lasers.transform.Find("FrontLaserC2").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.downLaserLeft = _lasers.transform.Find("FrontLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.downLaserRight = _lasers.transform.Find("FrontLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.downLaserConnector = _lasers.transform.Find("FrontLaserC").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.extendedLaserLeft = _lasers.transform.Find("ThinLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.extendedLaserRight = _lasers.transform.Find("ThinLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
-                        l.AddAllToList();
+                        playerLaserErr = true;
+                        ringErr = true;
+                    } 
+                    else
+                    {
+                        Plugin.Log.Info("" + (lasers == null ? "lasernull " : "laserok") + " " + (ringLights == null ? "ringnull" : "ringok"));
+                        duelPlayer = true;
 
+                        GameObject dueled = GameObject.Find("MultiplayerDuelConnectedPlayerController(Clone)/Lasers");
+
+                        // Load Lasers
+                        laserLeft = lasers.transform.Find("LaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        laserRight = lasers.transform.Find("LaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        allLasers = new List<TubeBloomPrePassLight>() { laserLeft, laserRight };
+
+                        ConnectedPlayerLighting l = new ConnectedPlayerLighting();
+                        l.laserLeft = dueled.transform.Find("SideLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.laserRight = dueled.transform.Find("SideLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        l.AddAllToList();
                         allLasers.AddRange(l.allLasers);
+                        connectedPlayerLighting = new List<ConnectedPlayerLighting>();
                         connectedPlayerLighting.Add(l);
-                        Plugin.Log.Info("Loaded a Connected Player's lights");
+
+                        // Load Ring
+                        ringLightFront = ringLights.transform.Find("DirectionalLight1").gameObject.GetComponent<DirectionalLight>();
+                        ringLightBehind = ringLights.transform.Find("DirectionalLight2").gameObject.GetComponent<DirectionalLight>();
+                        ringLightLeft = ringLights.transform.Find("DirectionalLight4").gameObject.GetComponent<DirectionalLight>();
+                        ringLightRight = ringLights.transform.Find("DirectionalLight3").gameObject.GetComponent<DirectionalLight>();
+                    }
+                } 
+                else // Normal multiplayer
+                {
+                    // Load player construction
+                    consturctionLeft = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Construction/ConstructionL");
+                    consturctionRight = GameObject.Find("MultiplayerLocalActivePlayerController(Clone)/IsActiveObjects/Construction/ConstructionR");
+
+                    // Load the lasers
+                    if (lasers != null)
+                    {
+                        laserLeft = lasers.transform.Find("LaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        laserRight = lasers.transform.Find("LaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        backLaserLeft = lasers.transform.Find("LaserR/LaserFrontL").gameObject.GetComponent<TubeBloomPrePassLight>();
+
+                        // Fixing for some reason front L being a child of laser r, and fixing its position
+                        backLaserLeft.transform.parent = lasers.transform;
+                        var v3 = backLaserLeft.transform.position;
+                        backLaserLeft.transform.SetPositionAndRotation(new Vector3(v3.x, 0, v3.z), backLaserLeft.transform.rotation);
+
+                        backLaserRight = lasers.transform.Find("LaserFrontR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        behindLaserLeft = lasers.transform.Find("LaserBackL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        behindLaserRight = lasers.transform.Find("LaserBackR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        farLaserLeft = lasers.transform.Find("LaserFarL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        farLaserRight = lasers.transform.Find("LaserFarR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                        allLasers = new List<TubeBloomPrePassLight>() { laserLeft, laserRight, backLaserLeft, backLaserRight, behindLaserLeft, behindLaserRight, farLaserLeft, farLaserRight };
+
+                        playerLaserErr = false;
+                    }
+                    else
+                    {
+                        Plugin.Log.Error("Lasers are disabled.");
+                        playerLaserErr = true;
+                    }
+
+                    // Loaded the other player's lasers
+                    connectedPlayerLighting = new List<ConnectedPlayerLighting>();
+                    var players = Resources.FindObjectsOfTypeAll<GameObject>().Where(obj => obj.name == "MultiplayerConnectedPlayerController(Clone)");
+                    if (players != null)
+                    {
+                        foreach (GameObject o in players)
+                        {
+                            ConnectedPlayerLighting l = new ConnectedPlayerLighting();
+                            GameObject _lasers = o.transform.Find("Lasers").gameObject;
+                            l.laserLeft = _lasers.transform.Find("SideLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.laserRight = _lasers.transform.Find("SideLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.laserFront = _lasers.transform.Find("FrontLaserC2").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.downLaserLeft = _lasers.transform.Find("FrontLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.downLaserRight = _lasers.transform.Find("FrontLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.downLaserConnector = _lasers.transform.Find("FrontLaserC").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.extendedLaserLeft = _lasers.transform.Find("ThinLaserL").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.extendedLaserRight = _lasers.transform.Find("ThinLaserR").gameObject.GetComponent<TubeBloomPrePassLight>();
+                            l.AddAllToList();
+
+                            allLasers.AddRange(l.allLasers);
+                            connectedPlayerLighting.Add(l);
+                            Plugin.Log.Info("Loaded a Connected Player's lights");
+                        }
+                    }
+
+                    // Load the ring lights
+                    if (ringLights != null)
+                    {
+                        ring = GameObject.Find("Environment/ArenaScoreBoard");
+                        ringLightBehind = ringLights.transform.Find("DirectionalLight1").gameObject.GetComponent<DirectionalLight>();
+                        ringLightFront = ringLights.transform.Find("DirectionalLight2").gameObject.GetComponent<DirectionalLight>();
+                        ringLightLeft = ringLights.transform.Find("DirectionalLight4").gameObject.GetComponent<DirectionalLight>();
+                        ringLightRight = ringLights.transform.Find("DirectionalLight3").gameObject.GetComponent<DirectionalLight>();
+
+                        ringErr = false;
+                    }
+                    else
+                    {
+                        Plugin.Log.Error("Ring Lights are disabled.");
+                        ringErr = true;
                     }
                 }
 
+                allRings = new List<DirectionalLight>() { ringLightBehind, ringLightFront, ringLightLeft, ringLightRight };
+
+                foreach (DirectionalLight l in allRings) LightingController.HandleLightEvent(l, new LightArrangement() { enabled = false, color = null });
+
                 cpOffColour = GetCSO(new Color(0, 0, 0));
+                foreach (TubeBloomPrePassLight l in allLasers) LightingController.HandleLightEvent(l, new LightArrangement() { enabled = false, color = null });
                 LightingController.HandleGlobalCPLightEvent(new LightArrangement() { enabled = false, color = cpOffColour });
 
-                // Load the ring lights
-                if (ringLights != null)
-                {
-                    ring = GameObject.Find("Environment/ArenaScoreBoard");
-                    ringLightBehind = ringLights.transform.Find("DirectionalLight1").gameObject.GetComponent<DirectionalLight>();
-                    ringLightFront = ringLights.transform.Find("DirectionalLight2").gameObject.GetComponent<DirectionalLight>();
-                    ringLightLeft = ringLights.transform.Find("DirectionalLight4").gameObject.GetComponent<DirectionalLight>();
-                    ringLightRight = ringLights.transform.Find("DirectionalLight3").gameObject.GetComponent<DirectionalLight>();
-                    allRings = new List<DirectionalLight>() { ringLightBehind, ringLightFront, ringLightLeft, ringLightRight };
-
-                    foreach (DirectionalLight l in allRings) LightingController.HandleLightEvent(l, new LightArrangement() { enabled = false, color = null });
-                    ringErr = false;
-                } 
-                else
-                {
-                    Plugin.Log.Error("Ring Lights are disabled.");
-                    ringErr = true;
-                }
 
                 Plugin.Log.Info("Lasers: " + (laserNull == true || lasers == null ? "error" : "working"));
                 Plugin.Log.Info("Ring Lights: " + (ringNull == true || ringLights == null ? "error" : "working"));
@@ -159,7 +202,7 @@ namespace LightingPlus.HarmonyPatches
                     loadedLights = true;
                 }
 
-                
+                Plugin.Log.Info("8");
             } catch (Exception e)
             {
                 Plugin.Log.Critical("Error loading lights: " + e.Message);
@@ -207,6 +250,7 @@ namespace LightingPlus.HarmonyPatches
                 ringErr = false;
                 isInMultiplayer = true;
                 ringRotateQueue = 0;
+                duelPlayer = false;
                 Plugin.Log.Info("In multiplayer.");
 
                 EnvironmentEffectsFilterPreset defaultPreset = playerSpecificSettings.environmentEffectsFilterDefaultPreset;
@@ -311,11 +355,16 @@ namespace LightingPlus.HarmonyPatches
                         }
                     case BeatmapEventType.Event8: // Ring rotate
                         {
+                            if (duelPlayer)
+                                break;
                             QueueRingRoate();
                             break;
                         }
                     case BeatmapEventType.Event9: // Ring expand
                         {
+                            if (duelPlayer)
+                                break;
+
                             CoRoutineController.i().StartCoroutine(RingExpand(laserLeft.transform, new Vector3((ringExpanded.Contains(laserLeft.transform) ? -1.20f : -4.20f), laserLeft.transform.position.y, laserLeft.transform.position.z), 0.5f));
                             CoRoutineController.i().StartCoroutine(RingExpand(consturctionLeft.transform, new Vector3((ringExpanded.Contains(consturctionLeft.transform) ? 0 : -3), consturctionLeft.transform.position.y, consturctionLeft.transform.position.z), 0.5f));
                             CoRoutineController.i().StartCoroutine(RingExpand(laserRight.transform, new Vector3((ringExpanded.Contains(laserRight.transform) ? 1.20f : 4.20f), laserRight.transform.position.y, laserRight.transform.position.z), 0.5f));
@@ -331,6 +380,9 @@ namespace LightingPlus.HarmonyPatches
 
             public static IEnumerator RingExpand(Transform toMove, Vector3 toMoveTo, float timeToMove)
             {
+                if (duelPlayer)
+                    yield break;
+
                 var currentPos = toMove.position;
                 var t = 0f;
 
@@ -349,6 +401,9 @@ namespace LightingPlus.HarmonyPatches
 
             public static void QueueRingRoate()
             {
+                if (duelPlayer)
+                    return;
+
                 ringRotateQueue++;
                 if (ringRotateQueue == 1)
                     CoRoutineController.i().StartCoroutine(RingRotate(0.25f));
@@ -356,6 +411,9 @@ namespace LightingPlus.HarmonyPatches
 
             public static IEnumerator RingRotate(float timeToMove)
             {
+                if (duelPlayer)
+                    yield break;
+                
                 Quaternion startRot = ring.transform.rotation;
                 float t = 0.0f;
                 while (t < timeToMove)
@@ -395,6 +453,7 @@ namespace LightingPlus.HarmonyPatches
                     foreach (TubeBloomPrePassLight l in allLasers)
                     {
                         if (playerLaserErr) break;
+                        if (l == null) continue;
                         if (!l.enabled) continue;
 
                         if (l.color == GetCSO(colours.environmentColor0))
@@ -406,6 +465,7 @@ namespace LightingPlus.HarmonyPatches
                     foreach (DirectionalLight l in allRings)
                     {
                         if (ringErr) break;
+                        if (l == null) continue;
                         if (!l.enabled) continue;
 
                         if (l.color == GetCSO(colours.environmentColor0))
@@ -419,6 +479,7 @@ namespace LightingPlus.HarmonyPatches
                     foreach (TubeBloomPrePassLight l in allLasers)
                     {
                         if (playerLaserErr) break;
+                        if (l == null) continue; 
                         if (!l.enabled) continue;
 
                         if (l.color == GetCSO(colours.environmentColor0Boost))
@@ -430,6 +491,7 @@ namespace LightingPlus.HarmonyPatches
                     foreach (DirectionalLight l in allRings)
                     {
                         if (ringErr) break;
+                        if (l == null) continue;
                         if (!l.enabled) continue;
 
                         if (l.color == GetCSO(colours.environmentColor0Boost))
@@ -460,6 +522,8 @@ namespace LightingPlus.HarmonyPatches
             public static void HandleLightEvent(TubeBloomPrePassLight light, LightArrangement arr)
             {
                 if (playerLaserErr) return;
+                if (light == null) return;
+
                 try
                 {
                     light.gameObject.SetActive(arr.enabled);
@@ -475,6 +539,8 @@ namespace LightingPlus.HarmonyPatches
             public static void HandleLightEvent(DirectionalLight light, LightArrangement arr)
             {
                 if (ringErr) return;
+                if (light == null) return;
+
                 try
                 {
                     light.gameObject.SetActive(arr.enabled);
@@ -489,18 +555,13 @@ namespace LightingPlus.HarmonyPatches
 
             public static void HandleCPLightEvent(TubeBloomPrePassLight light, LightArrangement arr)
             {
+                if (light == null) return;
+
                 try
                 {
+                    light.gameObject.SetActive(arr.enabled);
                     light.enabled = arr.enabled;
-                    if (arr.enabled)
-                    {
-                        light.gameObject.SetActive(arr.enabled);
-                        light.color = arr.color;
-                    } 
-                    else
-                    {
-                        light.color = cpOffColour;
-                    }
+                    light.color = (arr.color == null ? cpOffColour : arr.color);
                 }
                 catch (Exception e)
                 {
